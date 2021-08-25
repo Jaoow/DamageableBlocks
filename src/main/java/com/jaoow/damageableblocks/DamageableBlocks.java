@@ -5,6 +5,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class DamageableBlocks extends JavaPlugin implements Runnable {
+public final class DamageableBlocks extends JavaPlugin implements Runnable, CommandExecutor {
 
-    private final int blockRadius = this.getConfig().getInt("radius");
-    private final int searchDelay = this.getConfig().getInt("delay");
+    private int blockRadius = this.getConfig().getInt("radius");
+    private int searchDelay = this.getConfig().getInt("delay");
     private final Map<String, EnumMap<Material, Double>> worldDamageMap = Maps.newHashMap();
 
     @Override
@@ -27,6 +30,7 @@ public final class DamageableBlocks extends JavaPlugin implements Runnable {
         saveDefaultConfig();
 
         loadAllBlocks();
+        getCommand("blocksreload").setExecutor(this);
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, this, searchDelay, searchDelay);
     }
 
@@ -38,6 +42,38 @@ public final class DamageableBlocks extends JavaPlugin implements Runnable {
         }
     }
 
+    @Override
+    public void onDisable() {
+        super.onDisable();
+        Bukkit.getScheduler().cancelTasks(this);
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("blocks.admin")) {
+            sender.sendMessage("§cYou don't have permission to do this.");
+            return true;
+        }
+
+        this.reloadConfig();
+
+        // Cancel tasks
+        Bukkit.getScheduler().cancelTasks(this);
+
+        // Reload variables
+        blockRadius = this.getConfig().getInt("radius");
+        searchDelay = this.getConfig().getInt("delay");
+
+        // Reload all blocks.
+        worldDamageMap.clear();
+        loadAllBlocks();
+
+        // Init new task
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, this, searchDelay, searchDelay);
+
+        sender.sendMessage("§aConfiguration successfully reloaded.");
+        return super.onCommand(sender, command, label, args);
+    }
 
     @Override
     public void run() {
