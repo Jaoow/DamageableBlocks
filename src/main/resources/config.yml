@@ -1,0 +1,11 @@
+# Block Check Radius
+radius: 1
+# Block Check Delay
+delay: 20 # In ticks (1s = 20 ticks)
+
+# Valid materials (Case insensitive):
+# https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+worlds:
+  "world":
+    # (material): (damage)
+    bedrock: 1

@@ -1,0 +1,4 @@
+name: DamageableBlocks
+version: '${project.version}'
+main: com.jaoow.damageableblocks.DamageableBlocks
+authors: [ Jaoow ]
